@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Metrics Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Global Style */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.3s, color 0.3s;
+    background-size: cover; /* Ensures the image covers the entire background */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    background-position: center; /* Centers the image */
+}
+
+/* Light Mode */
+body.light-mode {
+    background: #f4f7fc;
+    color: #333;
+    background-image: url('https://wallpapers.com/images/hd/radio-telescope-1920-x-1080-wallpaper-0f8b2zebaogt1roc.jpg'); /* Replace with your light mode image URL */
+}
+
+/* Dark Mode */
+body.dark-mode {
+    background: #1e1e1e;
+    color: #fff;
+    background-image: url('https://wallpapers.com/images/hd/radio-telescope-1920-x-1080-wallpaper-dtyrw6njhphdtak2.jpg'); /* Replace with your dark mode image URL */
+}
+
+
+        #dashboard {
+            width: 100%;
+            max-width: 1500px;
+            max-height: 1000px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease-in-out;
+            max-height: 90vh;
+            overflow-y: auto;
+                /* Centering the div */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+    .chart-container {
+        display: flex;
+        gap: 20px; /* Adds space between the charts */
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 10px; 
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .chart {
+        flex: 1; /* Ensures both charts take up equal space */
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    #frequencySpectrum.chart-container {
+        display: flex;
+        gap: 20px; /* Adds space between the charts */
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    #frequencySpectrum .chart {
+        flex: 1; /* Ensures both charts take up equal space */
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* Time Series Chart (Separate Styling) */
+        #timeSeries.chart-container {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+        width: 100%; /* Ensures it stretches across the parent container */
+        max-width: 1400px; /* Increase this value to make it wider */
+    }
+    /* Time Series Chart */
+    #timeSeriesChart {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+        width: 100%; /* Stretches the graph within the container */
+
+    }
+    
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        input[type="file"], select {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover, select:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Dark Mode Button */
+        .toggle-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background-color: #007bff;
+            padding: 10px 15px;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Sliders */
+        .slider-container {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .slider {
+            width: 100%;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-values {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #dashboard {
+                width: 90%;
+            }
+            .chart-container {
+            flex-direction: column; /* Stacks the charts vertically on smaller screens */
+        }
+
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+    <div id="dashboard">
+        <button class="toggle-button" onclick="toggleDarkMode()">🌙</button>
+        
+        <h2>Radio Metrics Dashboard</h2>
+
+        <!-- Time Series Section -->
+        <div class="input-section">
+            <h3 class="section-title">Time Series Data</h3>
+            <p>Upload your JSON file for Time Series data:</p>
+            <input type="file" id="timeSeriesInput" accept=".json">
+            <div class="chart-container" id="timeSeries">
+                <div id="timeSeriesChart"></div>
+                <div id="modifiedDatasetsChart"></div>
+
+            </div>
+        </div>
+
+        <!-- Frequency Spectrum Section -->
+<div class="input-section">
+    <h3 class="section-title">Frequency Spectrum Data</h3>
+    <p>Upload your JSON file for Frequency Spectrum data:</p>
+    <input type="file" id="frequencySpectrumInput" accept=".json">
+    <label for="colorScale">Select Colorscale: </label>
+    <select id="colorScale">
+        <option value="Viridis">Viridis</option>
+        <option value="Cividis">Cividis</option>
+        <option value="Plasma">Plasma</option>
+        <option value="Inferno">Inferno</option>
+        <option value="Magma">Magma</option>
+        <option value="Rainbow">Rainbow</option>
+    </select>
+    <div class="chart-container" id="frequencySpectrum">
+        <div id="frequencyChart" class="chart"></div>
+        <div id="waterfallChart" class="chart"></div>
+    </div>
+</div>
+
+        
+    </div>
+
+    <script>
+        let timeAnimationInterval;
+        let globalFrequencyData = null;
+
+        document.getElementById('timeSeriesInput').addEventListener('change', handleTimeSeriesUpload);
+        document.getElementById('frequencySpectrumInput').addEventListener('change', handleFrequencyUpload);
+        document.getElementById('colorScale').addEventListener('change', updateWaterfallSpectrum);
+        document.getElementById('timeRange').addEventListener('input', updateTimeRange);
+        document.getElementById('frequencyRange').addEventListener('input', updateFrequencyRange);
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+            const body = document.body;
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                document.querySelector('.toggle-button').textContent = '🌞';
+            } else {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                document.querySelector('.toggle-button').textContent = '🌙';
+            }
+        }
+
+        // Handle Time Series JSON Upload
+        function handleTimeSeriesUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        if (Array.isArray(jsonData) && jsonData.length > 0 && 'Time' in jsonData[0] && 'Intensity' in jsonData[0]) {
+                            startTimeSeriesPlotting(jsonData);
+                        } else {
+                            alert('Invalid JSON format for Time Series data.');
+                        }
+                    } catch (error) {
+                        alert('Error parsing JSON file.');
+                    }
+                };
+
+                reader.readAsText(file);
+            }
+        }
+
+        function startTimeSeriesPlotting(data) {
+            clearInterval(timeAnimationInterval);
+
+            const timeData = [];
+            const intensityData = [];
+
+            const trace = {
+                x: timeData,
+                y: intensityData,
+                mode: 'lines',
+                name: 'Intensity',
+                line: { color: '#007bff' }
+            };
+
+            const layout = {
+                title: 'Signal Intensity Over Time',
+                xaxis: { title: 'Time (s)' },
+                yaxis: { title: 'Intensity' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('timeSeriesChart', [trace], layout);
+
+            let index = 0;
+
+            timeAnimationInterval = setInterval(() => {
+                if (index < data.length) {
+                    timeData.push(data[index].Time);
+                    intensityData.push(data[index].Intensity);
+
+                    Plotly.update('timeSeriesChart', {
+                        x: [timeData],
+                        y: [intensityData]
+                    });
+
+                    index++;
+                } else {
+                    clearInterval(timeAnimationInterval);
+                }
+            }, 100);
+        }
+
+        // Handle Frequency Spectrum JSON Upload
+        function handleFrequencyUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        if (Array.isArray(jsonData) && jsonData.length > 0 && 'Frequency' in jsonData[0] && 'Intensity1' in jsonData[0]) {
+                            globalFrequencyData = jsonData;
+                            generateFrequencySpectrum(jsonData);
+                            generateWaterfallSpectrum(jsonData);
+                        } else {
+                            alert('Invalid JSON format for Frequency Spectrum data.');
+                        }
+                    } catch (error) {
+                        alert('Error parsing JSON file.');
+                    }
+                };
+
+                reader.readAsText(file);
+            }
+        }
+
+
+        function generateFrequencySpectrum(data) {
+            const frequencies = data.map(item => item.Frequency);
+            const intensity1 = data.map(item => item.Intensity1);
+            const intensity2 = data.map(item => item.Intensity2 || null);
+
+            const trace1 = {
+                x: frequencies,
+                y: intensity1,
+                mode: 'lines',
+                name: 'Reciever1',
+                line: { color: '#007bff' }
+            };
+
+            const traces = [trace1];
+
+            if (intensity2.some(value => value !== null)) {
+                const trace2 = {
+                    x: frequencies,
+                    y: intensity2,
+                    mode: 'lines',
+                    name: 'Reciever2',
+                    line: { color: '#ff7f0e' }
+                };
+                traces.push(trace2);
+            }
+
+            const layout = {
+                title: 'Frequency Spectrum',
+                xaxis: { title: 'Frequency (Hz)' },
+                yaxis: { title: 'Intensity' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('frequencyChart', traces, layout);
+        }
+
+        function generateWaterfallSpectrum(data) {
+            const frequencies = data.map(item => item.Frequency);
+            const intensities = data.map(item => item.Intensity1);
+
+            const trace = {
+                z: [intensities],
+                x: frequencies,
+                colorscale: document.getElementById('colorScale').value,
+                type: 'heatmap',
+                colorbar: { title: 'Intensity' }
+            };
+
+            const layout = {
+                title: 'Waterfall Spectrum',
+                xaxis: { title: 'Frequency (Hz)' },
+                yaxis: { title: 'Time' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('waterfallChart', [trace], layout);
+        }
+
+        function updateWaterfallSpectrum() {
+            if (globalFrequencyData) {
+                generateWaterfallSpectrum(globalFrequencyData);
+            }
+        }
+
+        // Update Sliders for Filtering
+        function updateTimeRange() {
+            const timeRange = document.getElementById('timeRange').value;
+            console.log('Selected Time Range:', timeRange);
+            // Implement logic to filter the data based on this range
+        }
+
+        function updateFrequencyRange() {
+            const frequencyRange = document.getElementById('frequencyRange').value;
+            console.log('Selected Frequency Range:', frequencyRange);
+            // Implement logic to filter the data based on this range
+        }
+    </script>
+
+</body>
+</html>
