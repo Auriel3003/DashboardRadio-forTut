@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Metrics Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        #dashboard {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #upload {
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            background-color: white;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="dashboard">
+        <h2>Radio Metrics Dashboard</h2>
+        <p>Upload your JSON file to generate the metrics dashboard.</p>
+        <input type="file" id="fileInput" accept=".json">
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        let animationInterval;
+
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        if (Array.isArray(jsonData) && jsonData.length > 0 && 'Time' in jsonData[0] && 'Intensity' in jsonData[0]) {
+                            startPlotting(jsonData);
+                        } else {
+                            alert('Invalid JSON format. Please ensure it contains "Time" and "Intensity" fields.');
+                        }
+                    } catch (error) {
+                        alert('Error parsing JSON file. Please upload a valid file.');
+                    }
+                };
+
+                reader.readAsText(file);
+            }
+        }
+
+        function startPlotting(data) {
+            clearInterval(animationInterval); // Clear any existing animation interval
+
+            const timeData = [];
+            const intensityData = [];
+
+            // Initial Plotly setup
+            const trace = {
+                x: timeData,
+                y: intensityData,
+                mode: 'lines',
+                name: 'Intensity',
+                line: { color: '#007bff' }
+            };
+
+            const layout = {
+                title: 'Signal Intensity Over Time',
+                xaxis: { title: 'Time (s)' },
+                yaxis: { title: 'Intensity' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('chart', [trace], layout);
+
+            let index = 0;
+
+            animationInterval = setInterval(() => {
+                if (index < data.length) {
+                    timeData.push(data[index].Time);
+                    intensityData.push(data[index].Intensity);
+
+                    Plotly.update('chart', {
+                        x: [timeData],
+                        y: [intensityData]
+                    });
+
+                    index++;
+                } else {
+                    clearInterval(animationInterval);
+                }
+            }, 100); // Adjust interval as needed for smoother plotting
+        }
+    </script>
+</body>
+</html>
